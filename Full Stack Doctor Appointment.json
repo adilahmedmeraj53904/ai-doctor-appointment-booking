@@ -1,0 +1,1391 @@
+{
+  "name": "Full Stack Doctor Appointment",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f3d09f2e-e44e-4bb7-b8d7-f030643f5fea",
+      "name": "WhatsApp Trigger",
+      "webhookId": "e63fb36b-880f-401f-aaf8-119d54858d07",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "U89FoRj2NijUjI66",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are a doctor appointment booking assistant for Dr. Adil Ahmed Meraj, General Physician, Chamber Rajlokkhi, Uttara, Dhaka. Consultation fee is 500 Tk, pay at chamber.\n\nIf the user says hi, hello, or salam, always start with this exact welcome message first: \"Hello! I can help you book an appointment with Dr. Adil Ahmed Meraj.\" Then ask for the date. Never skip the welcome message.\n\nGENERAL QUESTIONS:\n- If the patient asks about the doctor, fee, chamber, timing, or any general question, answer it first, then continue the booking.\n- Reply in the same language the patient uses. If the patient writes in Bangla (Roman Bangla or Bangla script), reply in Bangla. If the patient writes in English, reply in English.\n- Do not ignore the patient's question. Do not repeat the date question without answering first.\n- Doctor details: Dr. Adil Ahmed Meraj, General Physician, Chamber Rajlokkhi, Uttara, Dhaka, Fee 500 Tk (pay at chamber), Saturday to Wednesday 4:00 PM to 8:00 PM, Thursday and Friday closed.\nBENGALI DIGITS:\n- If the patient writes dates, times, or numbers in Bengali digits, convert them to English digits first.\n- ০=0, ১=1, ২=2, ৩=3, ৪=4, ৫=5, ৬=6, ৭=7, ৮=8, ৯=9\n- For example, \"১৬ তারিখ\" means 16, \"১২ নম্বর\" means 12.\n- Always output the final JSON in English digits only. Never use Bengali digits in the JSON.\n\nCANCEL / RESCHEDULE:\n- If the patient asks whether cancel or reschedule is possible, for example \"Is reschedule available?\" or \"Can I cancel my booking?\", answer first: \"Yes, you can cancel or reschedule up to 2 hours before your appointment.\" Then ask: \"Do you want to cancel or reschedule now?\"\n- If the patient says Yes and wants to cancel or reschedule, ask for their phone number.\n- When the patient gives the phone number, output ONLY this JSON, with no other text:\n{\"action\": \"lookup\", \"phone\": \"\"}\n- Example: {\"action\": \"lookup\", \"phone\": \"01838828200\"}\n- Do not ask for the date or slot in cancel/reschedule flow. Ask only for the phone number.\n- Reply in the same language the patient uses.\n\nCANCEL:\n- If the patient says Cancel after seeing their booking, output ONLY this JSON, with no other text:\n{\"action\": \"cancel\", \"phone\": \"\"}\n- Use the phone number from the conversation history for the phone value.\n- Example: {\"action\": \"cancel\", \"phone\": \"01838828200\"}\n- Do not ask for the phone number again.\n\nRESCHEDULE:\n- If the patient said Reschedule and ask user now gives a new date and slot, output ONLY this JSON, with no other text:\n{\"action\": \"reschedule\", \"date\": \"YYYY-MM-DD\", \"time\": \"HH:MM:SS\", \"serial\": 0, \"phone\": \"\"}\n- Use the phone number from the conversation history.\n- Example: {\"action\": \"reschedule\", \"date\": \"2026-11-18\", \"time\": \"17:00:00\", \"serial\": 5, \"phone\": \"01838828200\"}\n- Do not ask for name, age or problem again.\n\n\n\n- Show the booking summary in the same language the patient uses. If the patient writes in Bangla, show the summary in Bangla. If the patient writes in English, show it in English.\n- The final JSON must always be in English.\n\nToday is {{ $now.toFormat('EEEE, yyyy-MM-dd') }}.\nValid booking dates are from tomorrow to 7 days from today, Saturday to Wednesday only. Thursday and Friday are closed. Calculate the valid dates yourself from today's date. Do not use any fixed date list.\n\nWorking days: Saturday to Wednesday, 4:00 PM to 8:00 PM. Thursday and Friday are closed.\nSlot duration is 20 minutes. There are 12 slots per day:\nSerial 1 = 4:00 PM, Serial 2 = 4:20 PM, Serial 3 = 4:40 PM, Serial 4 = 5:00 PM, Serial 5 = 5:20 PM, Serial 6 = 5:40 PM, Serial 7 = 6:00 PM, Serial 8 = 6:20 PM, Serial 9 = 6:40 PM, Serial 10 = 7:00 PM, Serial 11 = 7:20 PM, Serial 12 = 7:40 PM.\n\nDATE RULES - FOLLOW THESE EXACTLY:\n- Accept the date in any format, for example \"15\", \"16 tarikh\", \"22/11\", \"2026-11-16\". Always assume the current year and month unless the patient says otherwise.\n- Convert the date yourself to YYYY-MM-DD format. Never ask for the year. Never ask which weekday it is. Calculate the weekday yourself.\n- If the date is valid, accept it immediately and move to the next question. Never ask for the date again.\n- If the date is Thursday, Friday, or more than 7 days away, say so in one short message and ask for a valid date between tomorrow and 7 days from today, Saturday to Wednesday only.\n\nWEBSITE BOOKING:\n- If the patient asks for a website booking option, asks \"Do you have a website?\", \"Can I book from the website?\", or \"Is there any other way to book except WhatsApp?\", reply with this link:\nhttps://doctor-appointment-ten-ebon.vercel.app/book\n- Say: \"Yes, you can also book from our website: https://doctor-appointment-ten-ebon.vercel.app/book\"\n- Do not give any other link.\n\n\nSLOT RULES - FOLLOW THESE EXACTLY:\n- After the date is confirmed, never ask for the date again. The next message is always the time slot.\n- Show the slot list with Serial numbers 1 to 12 and say: \"Reply with the slot number (1 to 12) or the time, for example 5:00 PM.\"\n- If the patient replies with a number from 1 to 12 after the date is confirmed, that number is the slot number, not a date.\n- Always confirm the slot first. For example, if the patient says \"4\", reply: \"Do you mean Slot 4, 5:00 PM? Reply Yes to confirm.\" Do not move to the next question until the patient says Yes.\n- If the patient replies with a time like \"5 PM\" or \"5:00 PM\", use that time directly and confirm it the same way.\n\nCONVERSATION RULES:\n- Ask one question at a time, in simple English, in this exact order:\n1. Date\n2. Time slot\n3. Full name\n4. Age\n5. Phone number\n6. Problem\n- Ask short questions only. Do not explain the rules to the patient.\n- Do not ask a question you already have the answer to. Use the conversation history.\n\nFINAL STEP:\n- When you have all 6 items (date, time, serial, name, age, phone, problem), show a summary and ask: \"Reply Yes to confirm your booking.\"\n- When the patient says Yes, output ONLY this JSON, with no other text:\n{\"date\": \"YYYY-MM-DD\", \"time\": \"HH:MM:SS\", \"serial\": 0, \"name\": \"\", \"age\": 0, \"phone\": \"\", \"problem\": \"\"}\n- Example: {\"date\": \"2026-11-16\", \"time\": \"17:00:00\", \"serial\": 4, \"name\": \"Mehedi Hasan\", \"age\": 23, \"phone\": \"01800000000\", \"problem\": \"Fever\"}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        496,
+        0
+      ],
+      "id": "935b62f4-ddcc-448c-88b0-eb1c9395e63b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.messages[0].from }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        816,
+        208
+      ],
+      "id": "3fbab8ef-9373-4f84-b4ba-b801ef3ae50c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2416,
+        800
+      ],
+      "id": "3d4ee96b-abe3-42b4-9650-94b9d9ff82d6",
+      "name": "Send message",
+      "webhookId": "0d370ba6-0480-44df-b11e-d6328904b4b1",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "doctors",
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        416
+      ],
+      "id": "d5ce89ee-95a4-45a1-b0f6-7b488ba13186",
+      "name": "Doctors",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "slots",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "date",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).date }}"
+            },
+            {
+              "keyName": "time",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).time }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "booked"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        416
+      ],
+      "id": "ad6a2ceb-e03e-4b81-959b-2be8b0f71e34",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "1bcb524b-5929-4f07-be9a-5e38d736f84e",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2816,
+        416
+      ],
+      "id": "24130ab6-1b77-4477-b44b-f80e29871f13",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "tableId": "slots",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "doctor_id",
+              "fieldValue": "={{ $('Doctors').item.json.id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).date }}"
+            },
+            {
+              "fieldId": "serial_no",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).serial }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "booked"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).time }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        320
+      ],
+      "id": "745cf1ff-b902-4fcc-a562-3830eeea1ee4",
+      "name": "slots create",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "appointments",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "slot_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "patient_name",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).name }}"
+            },
+            {
+              "fieldId": "patient_age",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).age }}"
+            },
+            {
+              "fieldId": "patient_phone",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).phone }}"
+            },
+            {
+              "fieldId": "problem",
+              "fieldValue": "={{ JSON.parse($('Normal Conversation or booking session').first().json.output).problem }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "booked"
+            },
+            {
+              "fieldId": "whatsapp_number",
+              "fieldValue": "={{ $('WhatsApp Trigger').first().json.messages[0].from }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3264,
+        320
+      ],
+      "id": "d6c17e56-0b65-4e5d-96e8-1071fa38e12f",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "Slot is already booked. Try another Slot",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3056,
+        592
+      ],
+      "id": "5358202a-f943-41c7-bbec-3d27ceef76d6",
+      "name": "Slot Booked",
+      "webhookId": "d79d7027-7b30-40f2-800a-a6fc9c8560be",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ '✅ Booking Confirmed!\\n\\n👨‍⚕️ Doctor: Dr. Adil Ahmed Meraj\\n📅 Date: ' + JSON.parse($('Normal Conversation or booking session').first().json.output).date + '\\n🕖 Time: ' + JSON.parse($('Normal Conversation or booking session').first().json.output).time + '\\n🔢 Serial: ' + JSON.parse($('Normal Conversation or booking session').first().json.output).serial + '\\n👤 Patient: ' + JSON.parse($('Normal Conversation or booking session').first().json.output).name + '\\n📍 Chamber: Rajlokkhi, Uttara, Dhaka\\n💰 Fee: 500 Tk (pay at chamber)\\n\\n💳 Payment: Pending\\n\\nPay now: ' + $json.url + '\\nThank you!' }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        3664,
+        320
+      ],
+      "id": "d17c10d8-603a-40eb-9679-d905282729d0",
+      "name": "Booking Confirmation",
+      "webhookId": "50047861-5448-456d-9c4e-cd982ea7535a",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "f4aaec01-8a04-407a-a847-3cee162a3211",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "lookup",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1568,
+        288
+      ],
+      "id": "32559e3a-50f5-4e4b-b939-a5044ac4646f",
+      "name": "lookup check"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "slots",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.slot_id.trim() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        -176
+      ],
+      "id": "43fa9dc8-6697-4883-ae97-20f26cef5c45",
+      "name": "Get many rows2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "cc44d72a-0b73-4042-87bd-2aeecf81af0f",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "f683648b-4252-4516-aa9d-de22443ae454",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "No booking found for this phone number. Please check the number and try again, or book a new appointment.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2624,
+        64
+      ],
+      "id": "f0edf40b-54a1-48b2-8e3a-6899d2a7a059",
+      "name": "You have no previous appointment",
+      "webhookId": "4e945eb3-6a35-43b1-9e5c-3620e6f1c671",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "=Your booking: Date: {{ $json.date }} Time: {{ $json.time }} Serial: {{ $json.serial_no }}  Do you want to Cancel or Reschedule this booking? Reply Cancel or Reschedule.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2864,
+        -176
+      ],
+      "id": "9609f460-89f2-4e0e-99dc-ec3645bad885",
+      "name": "previous booking show",
+      "webhookId": "4d98cd53-2212-434b-b07f-1a0bdc133c85",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "cancelled"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        -272
+      ],
+      "id": "867a3a09-17c1-464f-92a5-c7473fc9cb9b",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "slots",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.slot_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "available"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2288,
+        -320
+      ],
+      "id": "3f67d6e4-3a78-4377-b731-daf17ac63dc1",
+      "name": "Update a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "✅ Your booking has been cancelled successfully.  Your slot is now free. You can book a new appointment anytime. Book here: https://doctor-appointment-ten-ebon.vercel.app/book",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2576,
+        -432
+      ],
+      "id": "e7e2b584-f753-42d7-a1d5-34dd923354e0",
+      "name": "Send message1",
+      "webhookId": "98782060-f489-48b1-acce-410077b80199",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "e84c431d-f440-4e6e-8fd3-cc26825930e5",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "\"action\": \"cancel\"",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1248,
+        16
+      ],
+      "id": "e2f78421-dd55-4554-90a2-889393a1074f",
+      "name": "Cancel Checkup"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "50e10ace-f6d4-472f-877c-830f5c499ef5",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "\"action\": \"reschedule\"",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        880,
+        0
+      ],
+      "id": "dae7fb0c-221b-4768-b674-6519e37ef6ab",
+      "name": "reschedule check"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "slots",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.slot_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ JSON.parse($('AI Agent').first().json.output).date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ JSON.parse($('AI Agent').first().json.output).time }}"
+            },
+            {
+              "fieldId": "serial_no",
+              "fieldValue": "={{ JSON.parse($('AI Agent').first().json.output).serial }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -304
+      ],
+      "id": "1c5620b6-fc23-4cfd-b666-fddb70c03196",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nvidia/switchyard",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        320,
+        272
+      ],
+      "id": "156d6a36-01e8-42b6-88fd-b8c742857c59",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "8mkKZ9KWcaQbvKRX",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ '✅ Your booking has been rescheduled!\\n\\nNew Date: ' + JSON.parse($('AI Agent').first().json.output).date + '\\nNew Time: ' + JSON.parse($('AI Agent').first().json.output).time + '\\nNew Serial: ' + JSON.parse($('AI Agent').first().json.output).serial + '\\n\\nChamber: Rajlokkhi, Uttara, Dhaka. Fee 500 Tk, pay at chamber.' }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1968,
+        -448
+      ],
+      "id": "17c9f511-3619-4158-aa55-146d811971b9",
+      "name": "Reschedule Massage",
+      "webhookId": "55ef3b80-34f7-4f70-ba46-040b5fc7524c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "patient_phone",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('AI Agent').first().json.output).phone }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "booked"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        0
+      ],
+      "id": "a9f371c6-8521-439c-908c-a12284ad9c70",
+      "name": "lookup for check",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "patient_phone",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('AI Agent').first().json.output).phone }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "booked"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        -128
+      ],
+      "id": "cda4067e-00c5-472f-aa0a-57544289e3e2",
+      "name": "Get data to cancel",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7b3debfb-9e60-4903-ad24-7cce0f2f84f2",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "\"serial\"",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1984,
+        608
+      ],
+      "id": "de47d6af-818c-4985-b4c1-e2a82fc6f9cc",
+      "name": "Normal Conversation or booking session"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/checkout/sessions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "mode",
+              "value": "payment"
+            },
+            {
+              "name": "line_items[0][price_data][currency]",
+              "value": "usd"
+            },
+            {
+              "name": "line_items[0][price_data][unit_amount]",
+              "value": "500"
+            },
+            {
+              "name": "line_items[0][price_data][product_data][name]",
+              "value": "Doctor Appointment"
+            },
+            {
+              "name": "line_items[0][quantity]",
+              "value": "1"
+            },
+            {
+              "name": "success_url",
+              "value": "https://doctor-appointment-ten-ebon.vercel.app/payment/success?session_id={CHECKOUT_SESSION_ID}"
+            },
+            {
+              "name": "cancel_url",
+              "value": "https://n8n.meraj.shop/webhook/payment-cancel"
+            },
+            {
+              "name": "metadata[appointmentId]",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3456,
+        320
+      ],
+      "id": "bb755a7c-8e9f-4b4a-bda8-59c2fe0bedfb",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xdcjcnWdoIO8e3Y3",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-payment",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        656
+      ],
+      "id": "c4722c4f-a7ac-431f-a1c0-1c2c2fe469ea",
+      "name": "Webhook",
+      "webhookId": "da0cece3-74b5-4ed3-9a0d-16d579be2513"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b4c96769-7534-4719-a055-dac83e8e53e1",
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": "checkout.session.completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "0080ad17-0527-4696-8099-83970d5e7daf",
+              "leftValue": "={{ $json.body.data.object.payment_status }}",
+              "rightValue": "paid",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        400,
+        656
+      ],
+      "id": "46d3959a-9c88-4e89-8e31-9f16d819495c",
+      "name": "Payment Completed?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "payment_status",
+              "fieldValue": "paid"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        928,
+        640
+      ],
+      "id": "274524b9-36f8-4dc6-8e98-95d53fb3b0ff",
+      "name": "Update a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=1351903724682512",
+        "recipientPhoneNumber": "={{ $json.whatsapp_number }}",
+        "textBody": "={{ '✅ Payment Successful!\\n\\n👤 Patient: ' + $json.patient_name + '\\n💰 Amount: $5.00\\n\\nYour appointment payment is complete. Thank you!' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        640
+      ],
+      "id": "2e0fe324-db18-4a6f-ac61-9368117cb5e0",
+      "name": "Send message2",
+      "webhookId": "80b4d075-ed34-4533-a424-0df083a17ce5",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "33yeDlbcKqxJ11m1",
+          "name": "WhatsApp account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.data.object.metadata.appointmentId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        688,
+        640
+      ],
+      "id": "ed2ae5cf-2071-456e-a1f0-a46b4aef4957",
+      "name": "Get many rows1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "JuJOEuuG719jmV3U",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Payment Section \n",
+        "height": 304,
+        "width": 1680,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "a855a56b-07b4-4cb6-a491-ca09be720cf8",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "reschedule check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Doctors": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "slots create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slot Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "slots create": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lookup check": {
+      "main": [
+        [
+          {
+            "node": "lookup for check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normal Conversation or booking session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Get many rows2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "You have no previous appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows2": {
+      "main": [
+        [
+          {
+            "node": "previous booking show",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Update a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row1": {
+      "main": [
+        [
+          {
+            "node": "Send message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Checkup": {
+      "main": [
+        [
+          {
+            "node": "Get data to cancel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "lookup check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reschedule check": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancel Checkup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "Reschedule Massage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lookup for check": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get data to cancel": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normal Conversation or booking session": {
+      "main": [
+        [
+          {
+            "node": "Doctors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Confirmation": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Booking Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Payment Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payment Completed?": {
+      "main": [
+        [
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row3": {
+      "main": [
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Update a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f6cd4d62-68e3-4477-95d7-0b1b15e45bff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8016af70e2772351af8e46a43445b221929918fc07cf4586ff34bf50bc27e012"
+  },
+  "nodeGroups": [],
+  "id": "UUDphtA9VJE1kt7v",
+  "tags": []
+}
